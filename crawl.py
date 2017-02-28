@@ -21,6 +21,8 @@ class Crawler():
         if not isdir(prefix):
             mkdir(prefix)
         self.prefix = prefix
+        self.tse_data = {}
+        self.fund_data = {}
 
     def _clean_row(self, row):
         ''' Clean comma and spaces '''
@@ -35,12 +37,36 @@ class Crawler():
         cw = csv.writer(f, lineterminator='\n')
         cw.writerow(row)
         f.close()
+    def _get_fund_data(self, date_str):
+        payload = {
+            'download': '',
+            'qdate': date_str,
+            'select2': 'ALLBUT0999',
+            'sorting': 'by_stkno'
+        }
+        url = 'http://www.twse.com.tw/ch/trading/fund/T86/T86.php'
+        # Get html page and parse as tree
+        page = requests.post(url, data=payload)
+        if not page.ok:
+            logging.error("Can not get Fund data at {}".format(date_str))
+            return
+        # Parse page
+        tree = html.fromstring(page.text)
+
+        for tr in tree.xpath('//table[2]/tbody/tr'):
+            fund = tr.xpath('td/text()')
+            row = self._clean_row([
+                fund[4],    #外資買賣超
+                fund[7],    #投信買賣超
+                fund[8],    #自營商買賣超
+            ])
+            self.fund_data[fund[0].strip(' ')] = row
 
     def _get_tse_data(self, date_str):
         payload = {
             'download': '',
             'qdate': date_str,
-            'selectType': 'ALL'
+            'selectType': 'ALLBUT0999'
         }
         url = 'http://www.twse.com.tw/ch/trading/exchange/MI_INDEX/MI_INDEX.php'
 
@@ -71,8 +97,7 @@ class Crawler():
                 sign + tds[9], # 漲跌價差
                 tds[3], # 成交筆數
             ])
-
-            self._record(tds[0].strip(), row)
+            self.tse_data[tds[0].strip(' ')] = row
 
     def _get_otc_data(self, date_str):
         ttime = str(int(time.time()*100))
@@ -104,13 +129,24 @@ class Crawler():
                 ])
                 self._record(tr[0], row)
 
-
     def get_data(self, year, month, day):
         date_str = '{0}/{1:02d}/{2:02d}'.format(year - 1911, month, day)
-        print 'Crawling {}'.format(date_str)
-        self._get_tse_data(date_str)
-        self._get_otc_data(date_str)
+        print 'Crawling {}'.format(date_str)        
+        self._get_tse_data(date_str)    #上市股票
+        #self._get_otc_data(date_str)   #上櫃股票 
+        self._get_fund_data(date_str)   #三大法人
+        
+        #for key, value in self.tse_data.iteritems():
+        for key in self.tse_data.keys():
+            _record_row = {}
+            if key in self.fund_data:
+                _record_row = self.tse_data[key] + self.fund_data[key]
+                pass
+            else:
+                _record_row = self.tse_data[key] + [0,0,0] 
 
+            self._record(key, _record_row)
+            print '{}: {}'.format(key, _record_row)
 
 def main():
     # Set logging
@@ -141,6 +177,7 @@ def main():
         parser.error('Date should be assigned with (YYYY MM DD) or none')
         return
 
+    first_day = datetime(2017,02,23)
     crawler = Crawler()
 
     # If back flag is on, crawl till 2004/2/11, else crawl one day
