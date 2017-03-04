@@ -37,6 +37,20 @@ class Crawler():
         cw = csv.writer(f, lineterminator='\n')
         cw.writerow(row)
         f.close()
+    def _check_date(self, date_str):
+        status = True
+        try:
+            f = open('{}/{}.csv'.format(self.prefix, '0050'), 'rb')
+            cr = csv.reader(f, delimiter=',', quotechar='|')
+            
+            for row in cr:
+                if date_str == row[0]:
+                    status = False
+            f.close()
+        except:
+            status = True
+        return status
+        
     def _get_fund_data(self, date_str):
         payload = {
             'download': '',
@@ -53,6 +67,7 @@ class Crawler():
         # Parse page
         tree = html.fromstring(page.text)
 
+        self.fund_data.clear()
         for tr in tree.xpath('//table[2]/tbody/tr'):
             fund = tr.xpath('td/text()')
             row = self._clean_row([
@@ -80,9 +95,9 @@ class Crawler():
         # Parse page
         tree = html.fromstring(page.text)
 
+        self.tse_data.clear()
         for tr in tree.xpath('//table[2]/tbody/tr'):
             tds = tr.xpath('td/text()')
-
             sign = tr.xpath('td/font/text()')
             sign = '-' if len(sign) == 1 and sign[0] == u'－' else ''
 
@@ -131,7 +146,11 @@ class Crawler():
 
     def get_data(self, year, month, day):
         date_str = '{0}/{1:02d}/{2:02d}'.format(year - 1911, month, day)
-        print 'Crawling {}'.format(date_str)        
+        print 'Crawling {}'.format(date_str)
+        if self._check_date(date_str) == False:
+            print date_str + ' is already updated!'
+            return 
+
         self._get_tse_data(date_str)    #上市股票
         #self._get_otc_data(date_str)   #上櫃股票 
         self._get_fund_data(date_str)   #三大法人
@@ -144,9 +163,8 @@ class Crawler():
                 pass
             else:
                 _record_row = self.tse_data[key] + [0,0,0] 
-
             self._record(key, _record_row)
-            print '{}: {}'.format(key, _record_row)
+        print date_str + ' update successed!'
 
 def main():
     # Set logging
@@ -177,7 +195,7 @@ def main():
         parser.error('Date should be assigned with (YYYY MM DD) or none')
         return
 
-    first_day = datetime(2017,02,23)
+    #first_day = datetime(2017,03,01)
     crawler = Crawler()
 
     # If back flag is on, crawl till 2004/2/11, else crawl one day
@@ -185,7 +203,7 @@ def main():
         # otc first day is 2007/04/20
         # tse first day is 2004/02/11
 
-        last_day = datetime(2004, 2, 11) if args.back else first_day - timedelta(10)
+        last_day = datetime(2007, 2, 11) if args.back else first_day - timedelta(10)
         max_error = 5
         error_times = 0
 
