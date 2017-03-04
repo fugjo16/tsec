@@ -15,6 +15,8 @@ from datetime import datetime, timedelta
 from os import mkdir
 from os.path import isdir
 
+from analyze import Analyzer
+
 class Crawler():
     def __init__(self, prefix="data"):
         ''' Make directory if not exist when initialize '''
@@ -195,6 +197,10 @@ def main():
         parser.error('Date should be assigned with (YYYY MM DD) or none')
         return
 
+    analyzer = Analyzer()
+    analyzer._check_stock()
+'''
+
     #first_day = datetime(2017,03,01)
     crawler = Crawler()
 
@@ -220,6 +226,6 @@ def main():
                 first_day -= timedelta(1)
     else:
         crawler.get_data(first_day.year, first_day.month, first_day.day)
-
+'''
 if __name__ == '__main__':
     main()

@@ -1,3 +1,6 @@
-*.pyc
-.DS_Store
+data/
 log/
+
+*.pyc
+*.csv
+.DS_Store
