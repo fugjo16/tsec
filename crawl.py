@@ -101,8 +101,11 @@ class Crawler():
         for tr in tree.xpath('//table[2]/tbody/tr'):
             tds = tr.xpath('td/text()')
             sign = tr.xpath('td/font/text()')
-            sign = '-' if len(sign) == 1 and sign[0] == u'－' else ''
-
+            if len(sign) == 1 and sign[0] == u'－':
+                tds[9] = '-' + tds[9]
+            elif len(sign) == 0:
+                tds[9] = tds[10]
+            
             row = self._clean_row([
                 date_str, # 日期
                 tds[2], # 成交股數
@@ -111,7 +114,7 @@ class Crawler():
                 tds[6], # 最高價
                 tds[7], # 最低價
                 tds[8], # 收盤價
-                sign + tds[9], # 漲跌價差
+                tds[9], # 漲跌價差
                 tds[3], # 成交筆數
             ])
             self.tse_data[tds[0].strip(' ')] = row
