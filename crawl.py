@@ -26,11 +26,16 @@ class Crawler():
         self.tse_data = {}
         self.fund_data = {}
 
+    def _is_number(self, str):
+        return str.replace('.','',1).replace('-','',1).isdigit()
+
     def _clean_row(self, row):
         ''' Clean comma and spaces '''
         for index, content in enumerate(row):
             row[index] = re.sub(",", "", content.strip())
-            row[index] = filter(lambda x: x in string.printable, row[index])
+            #row[index] = filter(lambda x: x in string.printable, row[index])
+            if (index > 0) and (self._is_number(row[index])) == False:     
+                row[index] = 0
         return row
 
     def _record(self, stock_id, row):
@@ -200,11 +205,7 @@ def main():
         parser.error('Date should be assigned with (YYYY MM DD) or none')
         return
 
-    analyzer = Analyzer()
-    analyzer._check_stock()
-'''
-
-    #first_day = datetime(2017,03,01)
+    first_day = datetime(2017,03,02)
     crawler = Crawler()
 
     # If back flag is on, crawl till 2004/2/11, else crawl one day
@@ -229,6 +230,6 @@ def main():
                 first_day -= timedelta(1)
     else:
         crawler.get_data(first_day.year, first_day.month, first_day.day)
-'''
+
 if __name__ == '__main__':
     main()
