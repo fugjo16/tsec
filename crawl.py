@@ -159,7 +159,7 @@ class Crawler():
         print 'Crawling {}'.format(date_str)
         if self._check_date(date_str) == False:
             print date_str + ' is already updated!'
-            return 
+            return False
 
         self._get_tse_data(date_str)    #上市股票
         #self._get_otc_data(date_str)   #上櫃股票 
@@ -175,6 +175,7 @@ class Crawler():
                 _record_row = self.tse_data[key] + [0,0,0] 
             self._record(key, _record_row)
         print date_str + ' update successed!'
+        return True
 
 def main():
     # Set logging
@@ -205,7 +206,7 @@ def main():
         parser.error('Date should be assigned with (YYYY MM DD) or none')
         return
 
-    first_day = datetime(2017,03,02)
+    #first_day = datetime(2017,03,02)
     crawler = Crawler()
 
     # If back flag is on, crawl till 2004/2/11, else crawl one day
@@ -213,13 +214,15 @@ def main():
         # otc first day is 2007/04/20
         # tse first day is 2004/02/11
 
-        last_day = datetime(2007, 2, 11) if args.back else first_day - timedelta(10)
+        last_day = datetime(2012, 1, 1) if args.back else first_day - timedelta(10)
         max_error = 5
         error_times = 0
 
         while error_times < max_error and first_day >= last_day:
             try:
-                crawler.get_data(first_day.year, first_day.month, first_day.day)
+                status = crawler.get_data(first_day.year, first_day.month, first_day.day)
+                if status == False: 
+                    break
                 error_times = 0
             except:
                 date_str = first_day.strftime('%Y/%m/%d')

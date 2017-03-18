@@ -28,7 +28,7 @@ class StockData():
 			self.ClosePrice = float(data[6])											# 收盤價 Close Price
 			self.Change = float(data[7])												# 漲跌價差 Change
 			self.LastPrice = self.ClosePrice - self.Change								# 昨日收盤價 Last Price 
-			self.ChangePercent = self.Change / self.LastPrice * 100						# 漲跌幅 % 
+			self.ChangePercent = (self.Change / self.LastPrice * 100) if (self.LastPrice > 0) else 0				# 漲跌幅 % 
 			self.NumberTransaction = float(data[8])										# 成交筆數 Number of Transactions
 			self.ForeignInvestor = float(data[9])										# 外資買賣超 Foreign Investor Net Buy 
 			self.InvestTrust = float(data[10])											# 投信買賣超 Invest Trust Net Buy 
@@ -36,13 +36,17 @@ class StockData():
 		except:
 			print 'ERROR: [{}]: {}'.format(stock_id, str(data))
 
-	def ToString(self):
-		#return [self.Date.strftime("%Y-%m-%d"), self.Volume, self.TurnoverValue, self.NumberTransaction, self.OpenPrice, self.ClosePrice, self.Change, self.ChangePercent, self.ForeignInvestor, self.InvestTrust, self.Dealer]
-		return '[{}] {}: {}% > {}, {}'.format(self.id, self.Date.strftime("%Y-%m-%d"), '%.2f' % self.ChangePercent,
+	def __str__(self):  
+		return '{},{},{}, {},{},{}, {},{},{},{},{}, {},{},{}\n'.format(self.id, '%d/%02d/%02d' % (self.Date.year-1911, self.Date.month, self.Date.day), '%.2f' % self.ChangePercent, 
+							self.Volume, self.TurnoverValue, self.NumberTransaction, 
+							self.OpenPrice, self.HighPrice, self.LowPrice, self.ClosePrice, self.Change, 
+							self.ForeignInvestor, self.InvestTrust, self.Dealer)
+'''
+		return '[{}] {}: {}% > {}, {}'.format(self.id, '%d/%02d/%02d' % (self.Date.year-1911, self.Date.month, self.Date.day), '%.2f' % (self.ChangePercent),
 							[self.OpenPrice, self.HighPrice, self.LowPrice, self.ClosePrice, self.Change],
 							[self.ForeignInvestor, self.InvestTrust, self.Dealer],
 							)
-
+'''
 class Analyzer():
 	def __init__(self, prefix="data"):
 		if not isdir(prefix):
@@ -60,27 +64,37 @@ class Analyzer():
 		f.close()
 		return rows
 
-	def _check_stock(self):
-		for file in os.listdir(self.prefix):
-			stock_id = file.strip('.csv')
-			rows = self._get_rows(stock_id)
-			stock_days = []
-			for row in rows:
-				data = StockData(stock_id, row)
-				stock_days.append(data)
-			self.stock[stock_id] = stock_days
-		print self.stock['2317'][1].ToString()
-		#print self.stock[stock_id]
+	def _record(self, row):
+		''' Save row to csv file '''
+		f = open('analyze.csv', 'ab')
+		f.write(row)
+		f.close()
+	def _record_stock(self, data):
+		cnt = 0
+		if data.ChangePercent > 3:
+			cnt = 10
+			self._record('\n')
 
-'''
-		rows = self._get_rows('0050')
-		#print len(rows)
-		for row in rows:
-			data = StockData(row)
-			#if(data.ChangePercent > 2):
-			#	print data.ToString()
-'''
+			if cnt > 0:
+				print str(data)
+				self._record(str(data))
+				cnt -= 1
+				#print ', '.join("%s: %s" % item for item in vars(stock_days[index]).items())
+			
+
+	def _check_stock(self):
+		f = open('analyze.csv', 'wb')
+		f.close()
+		#for file in os.listdir(self.prefix):
+		stock_id = '2317'	#file.strip('.csv')
+		rows = self._get_rows(stock_id)
+		stock_days = []
 		
+		for row in rows:
+			data = StockData(stock_id, row)
+			stock_days.append(data)
+			
+		self.stock[stock_id] = stock_days
 
 def main():
 	analyzer = Analyzer()
