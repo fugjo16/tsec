@@ -214,7 +214,7 @@ def main():
         # otc first day is 2007/04/20
         # tse first day is 2004/02/11
 
-        last_day = datetime(2012, 1, 1) if args.back else first_day - timedelta(10)
+        last_day = datetime(2012, 1, 1) if args.back else first_day - timedelta(48)
         max_error = 5
         error_times = 0
 
