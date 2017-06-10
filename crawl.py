@@ -57,7 +57,7 @@ class Crawler():
         except:
             status = True
         return status
-        
+
     def _get_fund_data(self, date_str):
         payload = {
             'download': '',
@@ -85,44 +85,47 @@ class Crawler():
             self.fund_data[fund[0].strip(' ')] = row
 
     def _get_tse_data(self, date_str):
-        payload = {
-            'download': '',
-            'qdate': date_str,
-            'selectType': 'ALLBUT0999'
-        }
-        url = 'http://www.twse.com.tw/ch/trading/exchange/MI_INDEX/MI_INDEX.php'
+        first_day = datetime(2017, 6, 9)
+        date_tuple = (first_day.year, first_day.month, first_day.day)
+        date_str = '{0}{1:02d}{2:02d}'.format(first_day.year, first_day.month, first_day.day)
+        
+        url = 'http://www.twse.com.tw/exchangeReport/MI_INDEX'
 
-        # Get html page and parse as tree
-        page = requests.post(url, data=payload)
+        query_params = {
+            'date': date_str,
+            'response': 'json',
+            'type': 'ALLBUT0999',
+            '_': str(round(time.time() * 1000) - 500)
+        }
+        #url = 'http://www.twse.com.tw/exchangeReport/MI_INDEX'
+
+        # Get json data
+        page = requests.get(url, params=query_params)
 
         if not page.ok:
             logging.error("Can not get TSE data at {}".format(date_str))
             return
 
-        # Parse page
-        tree = html.fromstring(page.text)
-
+        content = page.json()
         self.tse_data.clear()
-        for tr in tree.xpath('//table[2]/tbody/tr'):
-            tds = tr.xpath('td/text()')
-            sign = tr.xpath('td/font/text()')
-            if len(sign) == 1 and sign[0] == u'－':
-                tds[9] = '-' + tds[9]
-            elif len(sign) == 0:
-                tds[9] = tds[10]
-            
+
+        # For compatible with original data
+        date_str_record = '{0}/{1:02d}/{2:02d}'.format(first_day.year - 1911, first_day.month, first_day.day)
+
+        for data in content['data5']:
+            sign = '-' if data[9].find('green') > 0 else ''
             row = self._clean_row([
-                date_str, # 日期
-                tds[2], # 成交股數
-                tds[4], # 成交金額
-                tds[5], # 開盤價
-                tds[6], # 最高價
-                tds[7], # 最低價
-                tds[8], # 收盤價
-                tds[9], # 漲跌價差
-                tds[3], # 成交筆數
+                date_str_record, # 日期
+                data[2], # 成交股數
+                data[4], # 成交金額
+                data[5], # 開盤價
+                data[6], # 最高價
+                data[7], # 最低價
+                data[8], # 收盤價
+                sign + data[10], # 漲跌價差
+                data[3], # 成交筆數
             ])
-            self.tse_data[tds[0].strip(' ')] = row
+            self.tse_data[data[0].strip()] = row
 
     def _get_otc_data(self, date_str):
         ttime = str(int(time.time()*100))
@@ -196,7 +199,7 @@ def main():
         help='crawl back 10 days for check data')
 
     args = parser.parse_args()
-    #print args
+
     # Day only accept 0 or 3 arguments
     if len(args.day) == 0:
         first_day = datetime.today()
