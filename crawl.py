@@ -84,11 +84,9 @@ class Crawler():
             ])
             self.fund_data[fund[0].strip(' ')] = row
 
-    def _get_tse_data(self, date_str):
-        first_day = datetime(2017, 6, 9)
-        date_tuple = (first_day.year, first_day.month, first_day.day)
-        date_str = '{0}{1:02d}{2:02d}'.format(first_day.year, first_day.month, first_day.day)
-        
+    def _get_tse_data(self, date):
+        date_str = '{0}{1:02d}{2:02d}'.format(date.year, date.month, date.day)
+        print date_str
         url = 'http://www.twse.com.tw/exchangeReport/MI_INDEX'
 
         query_params = {
@@ -110,7 +108,7 @@ class Crawler():
         self.tse_data.clear()
 
         # For compatible with original data
-        date_str_record = '{0}/{1:02d}/{2:02d}'.format(first_day.year - 1911, first_day.month, first_day.day)
+        date_str_record = '{0}/{1:02d}/{2:02d}'.format(date.year - 1911, date.month, date.day)
 
         for data in content['data5']:
             sign = '-' if data[9].find('green') > 0 else ''
@@ -157,14 +155,14 @@ class Crawler():
                 ])
                 self._record(tr[0], row)
 
-    def get_data(self, year, month, day):
-        date_str = '{0}/{1:02d}/{2:02d}'.format(year - 1911, month, day)
+    def get_data(self, date):
+        date_str = '{0}/{1:02d}/{2:02d}'.format(date.year - 1911, date.month, date.day)
         print 'Crawling {}'.format(date_str)
         if self._check_date(date_str) == False:
             print date_str + ' is already updated!'
             return False
 
-        self._get_tse_data(date_str)    #上市股票
+        self._get_tse_data(date)    #上市股票
         #self._get_otc_data(date_str)   #上櫃股票 
         self._get_fund_data(date_str)   #三大法人
         
@@ -209,7 +207,7 @@ def main():
         parser.error('Date should be assigned with (YYYY MM DD) or none')
         return
 
-    #first_day = datetime(2017,03,02)
+    #first_day = datetime(2017,6,9)
     crawler = Crawler()
 
     # If back flag is on, crawl till 2004/2/11, else crawl one day
@@ -223,7 +221,7 @@ def main():
 
         while error_times < max_error and first_day >= last_day:
             try:
-                status = crawler.get_data(first_day.year, first_day.month, first_day.day)
+                status = crawler.get_data(first_day)
                 if status == False: 
                     break
                 error_times = 0
@@ -235,7 +233,7 @@ def main():
             finally:
                 first_day -= timedelta(1)
     else:
-        crawler.get_data(first_day.year, first_day.month, first_day.day)
+        crawler.get_data(first_day)
 
 if __name__ == '__main__':
     main()
