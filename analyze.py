@@ -102,41 +102,43 @@ class Analyzer():
 			event_triger = False
 			str_msg = ''
 
-			# =========================== 買進訊號 ===========================
-			max_ratio = (self.stock[stock_id][0].InvestTrust / self.stock[stock_id][0].MonthMaxTrust) if (self.stock[stock_id][0].MonthMaxTrust > 0) else 999
-			if (self.stock[stock_id][0].InvestTrust > 0) and (max_ratio > 4):
-				str_msg += '投信買超' + ('%.0f'%(self.stock[stock_id][0].InvestTrust/1000)) + '張 > 月最多' + ('%.0f'%(self.stock[stock_id][0].MonthMaxTrust/1000)) +'張  ['+ ('%.1f'%max_ratio) + '倍]\n'
-				event_triger = True
+			try:
+				# =========================== 買進訊號 ===========================
+				max_ratio = (self.stock[stock_id][0].InvestTrust / self.stock[stock_id][0].MonthMaxTrust) if (self.stock[stock_id][0].MonthMaxTrust > 0) else 999
+				if (self.stock[stock_id][0].InvestTrust > 0) and (max_ratio > 4):
+					str_msg += '投信買超' + ('%.0f'%(self.stock[stock_id][0].InvestTrust/1000)) + '張 > 月最多' + ('%.0f'%(self.stock[stock_id][0].MonthMaxTrust/1000)) +'張  ['+ ('%.1f'%max_ratio) + '倍]\n'
+					event_triger = True
 
-			trust_ratio = (self.stock[stock_id][0].InvestTrust / self.stock[stock_id][0].Volume * 100)
-			if trust_ratio > 5:
-				str_msg += '昨日投信買超(' + '%.1f'%(trust_ratio) + '%) 大於5%\n'
-				event_triger = True
+				trust_ratio = (self.stock[stock_id][0].InvestTrust / self.stock[stock_id][0].Volume * 100)
+				if trust_ratio > 5:
+					str_msg += '昨日投信買超(' + '%.1f'%(trust_ratio) + '%) 大於5%\n'
+					event_triger = True
 
-			foreign_ratio = self.stock[stock_id][0].ForeignInvestor / self.stock[stock_id][0].Volume * 100
-			if foreign_ratio > 50:
-				str_msg += '昨日外資買超(' + '%.1f'%foreign_ratio + '%) 大於50%\n'
-				event_triger = True
+				foreign_ratio = self.stock[stock_id][0].ForeignInvestor / self.stock[stock_id][0].Volume * 100
+				if foreign_ratio > 50:
+					str_msg += '昨日外資買超(' + '%.1f'%foreign_ratio + '%) 大於50%\n'
+					event_triger = True
 
-			if (self.stock[stock_id][0].Val_K > self.stock[stock_id][0].Val_D) and (self.stock[stock_id][1].Val_K < self.stock[stock_id][1].Val_D) and \
-				 (self.stock[stock_id][1].Val_D < 30) and (self.stock[stock_id][1].Val_K < 30):
-				str_msg += 'KD9黃金交叉 (' + '%.1f'%(self.stock[stock_id][0].Val_K) + '/' + '%.1f'%(self.stock[stock_id][0].Val_D) + ')\n'
-				event_triger = True
+				if (self.stock[stock_id][0].Val_K > self.stock[stock_id][0].Val_D) and (self.stock[stock_id][1].Val_K < self.stock[stock_id][1].Val_D) and \
+					 (self.stock[stock_id][1].Val_D < 30) and (self.stock[stock_id][1].Val_K < 30):
+					str_msg += 'KD9黃金交叉 (' + '%.1f'%(self.stock[stock_id][0].Val_K) + '/' + '%.1f'%(self.stock[stock_id][0].Val_D) + ')\n'
+					event_triger = True
 
-			if (self.stock[stock_id][0].ClosePrice > self.stock[stock_id][0].MA20) and (self.stock[stock_id][1].ClosePrice < self.stock[stock_id][0].MA20):
-				str_msg += '向上突破MA20 (' + '%.1f'%self.stock[stock_id][0].ClosePrice + ' > ' + '%.1f'%self.stock[stock_id][0].MA20 + ')\n'
-				event_triger = True
+				if (self.stock[stock_id][0].ClosePrice > self.stock[stock_id][0].MA20) and (self.stock[stock_id][1].ClosePrice < self.stock[stock_id][0].MA20):
+					str_msg += '向上突破MA20 (' + '%.1f'%self.stock[stock_id][0].ClosePrice + ' > ' + '%.1f'%self.stock[stock_id][0].MA20 + ')\n'
+					event_triger = True
 
-			# =========================== 賣出訊號 ===========================
-			if (self.stock[stock_id][0].Val_K < self.stock[stock_id][0].Val_D) and (self.stock[stock_id][1].Val_K > self.stock[stock_id][1].Val_D) and \
-				 (self.stock[stock_id][1].Val_D > 70) and (self.stock[stock_id][1].Val_K > 70):
-				str_msg += '!!! KD9死亡交叉 (' + '%.1f'%(self.stock[stock_id][0].Val_K) + '/' + '%.1f'%(self.stock[stock_id][0].Val_D) + ')\n'
-				event_triger = True
+				# =========================== 賣出訊號 ===========================
+				if (self.stock[stock_id][0].Val_K < self.stock[stock_id][0].Val_D) and (self.stock[stock_id][1].Val_K > self.stock[stock_id][1].Val_D) and \
+					 (self.stock[stock_id][1].Val_D > 70) and (self.stock[stock_id][1].Val_K > 70):
+					str_msg += '!!! KD9死亡交叉 (' + '%.1f'%(self.stock[stock_id][0].Val_K) + '/' + '%.1f'%(self.stock[stock_id][0].Val_D) + ')\n'
+					event_triger = True
 
-			if (self.stock[stock_id][0].ClosePrice < self.stock[stock_id][0].MA20) and (self.stock[stock_id][1].ClosePrice > self.stock[stock_id][0].MA20):
-				str_msg += '!!! 向下突破MA5 (' + '%.1f'%self.stock[stock_id][0].ClosePrice + ' < ' + '%.1f'%self.stock[stock_id][0].MA20 + ')\n'
-				event_triger = True	
-
+				if (self.stock[stock_id][0].ClosePrice < self.stock[stock_id][0].MA20) and (self.stock[stock_id][1].ClosePrice > self.stock[stock_id][0].MA20):
+					str_msg += '!!! 向下突破MA5 (' + '%.1f'%self.stock[stock_id][0].ClosePrice + ' < ' + '%.1f'%self.stock[stock_id][0].MA20 + ')\n'
+					event_triger = True	
+			except:
+				print "Analyze Error: ", sys.exc_info()[0]
 			# =========================== Send Out Message ===========================
 			if event_triger == True:
 				#MessageBox(stock_id, str_msg)
@@ -150,7 +152,8 @@ class Analyzer():
 			for i in range(5):
 				if self.stock[stock_id][i].InvestTrust > self.stock[stock_id][0].WeekMaxTrust:
 					self.stock[stock_id][0].WeekMaxTrust = self.stock[stock_id][i].InvestTrust
-				self.stock[stock_id][0].WeekTotalForeign += (self.stock[stock_id][i].ForeignInvestor / self.stock[stock_id][i].Volume) * 100 / 5
+				if self.stock[stock_id][i].Volume != 0:
+					self.stock[stock_id][0].WeekTotalForeign += (self.stock[stock_id][i].ForeignInvestor / self.stock[stock_id][i].Volume) * 100 / 5
 				self.stock[stock_id][0].MA5 += self.stock[stock_id][i].ClosePrice / 5
 			#	if stock_id == '2317':
 			#		print str(stock_id) + ': ' + str(self.stock[stock_id][0].WeekTotalForeign)
