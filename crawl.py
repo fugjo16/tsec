@@ -58,31 +58,31 @@ class Crawler():
             status = True
         return status
 
-    def _get_fund_data(self, date_str):
-        payload = {
-            'download': '',
-            'qdate': date_str,
-            'select2': 'ALLBUT0999',
-            'sorting': 'by_stkno'
+    def _get_fund_data(self, date):
+        date_str = '{0}{1:02d}{2:02d}'.format(date.year, date.month, date.day)
+        query_params = {
+            'date': date_str,
+            'selectType': 'ALLBUT0999'
         }
-        url = 'http://www.twse.com.tw/ch/trading/fund/T86/T86.php'
+        url = 'http://www.twse.com.tw/fund/T86'
         # Get html page and parse as tree
-        page = requests.post(url, data=payload)
+        page = requests.get(url, params=query_params)
         if not page.ok:
             logging.error("Can not get Fund data at {}".format(date_str))
             return
         # Parse page
-        tree = html.fromstring(page.text)
-
+        content = page.json()
         self.fund_data.clear()
-        for tr in tree.xpath('//table[2]/tbody/tr'):
-            fund = tr.xpath('td/text()')
+
+        date_str_record = '{0}/{1:02d}/{2:02d}'.format(date.year - 1911, date.month, date.day)
+
+        for data in content['data']:
             row = self._clean_row([
-                fund[4],    #外資買賣超
-                fund[7],    #投信買賣超
-                fund[8],    #自營商買賣超
+                data[4],    #外資買賣超
+                data[7],    #投信買賣超
+                data[8],    #自營商買賣超
             ])
-            self.fund_data[fund[0].strip(' ')] = row
+            self.fund_data[data[0].strip(' ')] = row
 
     def _get_tse_data(self, date):
         date_str = '{0}{1:02d}{2:02d}'.format(date.year, date.month, date.day)
@@ -95,7 +95,10 @@ class Crawler():
             'type': 'ALLBUT0999',
             '_': str(round(time.time() * 1000) - 500)
         }
-        #url = 'http://www.twse.com.tw/exchangeReport/MI_INDEX'
+
+        # 另外一種做法 
+        # params = {"date":"20170524", "stockNo":"1101"}
+        # res = requests.post('http://www.twse.com.tw/exchangeReport/STOCK_DAY',params=params)
 
         # Get json data
         page = requests.get(url, params=query_params)
@@ -164,7 +167,7 @@ class Crawler():
 
         self._get_tse_data(date)    #上市股票
         #self._get_otc_data(date_str)   #上櫃股票 
-        self._get_fund_data(date_str)   #三大法人
+        self._get_fund_data(date)   #三大法人
         
         #for key, value in self.tse_data.iteritems():
         for key in self.tse_data.keys():
