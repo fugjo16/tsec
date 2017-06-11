@@ -19,7 +19,7 @@ def MessageBox(title, text, style=0x00):
 
 class StockData():
 	def __init__(self, stock_id, data=[]):
-		if len(data) < 10:
+		if len(data) <= 12:
 			return
 		try:
 			self.id = stock_id
@@ -48,8 +48,8 @@ class StockData():
 			self.MA20 = 0				# MA20
 
 
-		except:
-			print 'ERROR: [{}]: {}'.format(stock_id, str(data))
+		except Exception, e:
+			print 'ERROR: [{}]: {}'.format(stock_id, str(e))
 
 	def __str__(self):  
 		return '{},{},{}, {},{},{}, {},{},{},{},{}, {},{},{}'.format(self.id, '%d/%02d/%02d' % (self.Date.year-1911, self.Date.month, self.Date.day), '%.2f' % self.ChangePercent, 
