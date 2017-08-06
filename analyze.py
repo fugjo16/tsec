@@ -77,6 +77,7 @@ class Analyzer():
 		for row in cr:
 			rows.append(row)
 			#print row
+		del rows[0]
 		f.close()
 		return rows
 
