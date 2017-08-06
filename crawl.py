@@ -40,10 +40,17 @@ class Crawler():
 
     def _record(self, stock_id, row):
         ''' Save row to csv file '''
+        row_header = []
+        if not os.path.isfile('{}/{}.csv'.format(self.prefix, stock_id)):
+            row_header = ['Date','Volume','Value','Open','High','Low','Close','Charge','Number','Foreign','Invest','Dealer','K_9','D_9']
+
         f = open('{}/{}.csv'.format(self.prefix, stock_id), 'ab')
         cw = csv.writer(f, lineterminator='\n')
+        if len(row_header) > 0:
+            cw.writerow(row_header)
         cw.writerow(row)
         f.close()
+
     def _check_date(self, date_str):
         status = True
         try:

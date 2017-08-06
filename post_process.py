@@ -62,7 +62,9 @@ def main():
 
         # Load and remove duplicates (use newer)
         with open('{}/{}'.format(FOLDER, file_name), 'rb') as file:
-            for line in file.readlines():
+            lines = file.readlines()
+            for i in range(1, len(lines)):  # Remove row header
+                line = lines[i]
                 dict_rows[line.split(',', 1)[0]] = line
 
         # Sort by date
@@ -73,6 +75,8 @@ def main():
         rows = rows[:length]
         get_kd_value(rows)
         with open('{}/{}'.format(FOLDER, file_name), 'wb') as file:
+            row_header = ['Date,Volume,Value,Open,High,Low,Close,Charge,Number,Foreign,Invest,Dealer,K_9,D_9\n']
+            rows = row_header + rows
             file.writelines(rows)
 
 if __name__ == '__main__':
