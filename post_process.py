@@ -5,11 +5,16 @@ import pandas as pd
 
 FOLDER = 'data'
 
+IDX_CLOSE = 6
 IDX_5MA = 12
 IDX_10MA = 13
 IDX_20MA = 14
 IDX_K9 = 15
 IDX_D9 = 16
+IDX_UPB = 17
+IDX_LWB = 18
+IDX_PB = 19
+IDX_BW = 20
 
 def string_to_time(string):
     year, month, day = string.split('/')
@@ -33,8 +38,12 @@ def check_kd_init(stock_data):
     if len(stock_data.columns) < 16:
         stock_data['K_9'] = pd.Series(np.full(len(stock_data), -1.0), index=stock_data.index)
         stock_data['D_9'] = pd.Series(np.full(len(stock_data), -1.0), index=stock_data.index)
-
-                
+    if len(stock_data.columns) < 18:
+        stock_data['Upper_Band'] = pd.Series(np.full(len(stock_data), -1.0), index=stock_data.index)
+        stock_data['Lower_Band'] = pd.Series(np.full(len(stock_data), -1.0), index=stock_data.index)
+        stock_data['PB'] = pd.Series(np.full(len(stock_data), -1.0), index=stock_data.index)        # Persent B, PB
+        stock_data['BW'] = pd.Series(np.full(len(stock_data), -1.0), index=stock_data.index)        # Bandwidth, BW
+        
     return stock_data
 
 def get_kd_value(rows):
@@ -60,11 +69,29 @@ def get_kd_value(rows):
     return rows
 
 def get_avg_line(rows):
-
+    if len(rows) > 20:
+        last_day = len(rows)-20
+        for index in range(last_day-1, -1, -1):
+            if rows[index, IDX_5MA] < 0:
+                rows[index, IDX_5MA] = sum(rows[index:index+5, IDX_CLOSE]) / 5
+            if rows[index, IDX_10MA] < 0:
+                rows[index, IDX_10MA] = sum(rows[index:index+10, IDX_CLOSE]) / 10
+            if rows[index, IDX_20MA] < 0:
+                rows[index, IDX_20MA] = sum(rows[index:index+20, IDX_CLOSE]) / 20        
+#                rows[index, IDX_20MA] = sum(sum(rows[index:index+20, 4:6])) / 40    # 20MA with Min-Max
     return rows
     
 def get_bbands(rows):
-    
+    if len(rows) > 20:
+        last_day = len(rows)-20
+        for index in range(last_day-1, -1, -1):
+            if rows[index, IDX_20MA] <= 0:
+                continue
+            sdt = np.std(rows[index:index+20, 6])
+            rows[index, IDX_UPB] = rows[index, IDX_20MA] + 2.1*sdt
+            rows[index, IDX_LWB] = rows[index, IDX_20MA] - 2.1*sdt
+            rows[index, IDX_PB] = (rows[index, IDX_CLOSE] - rows[index, IDX_LWB]) / (4.2*sdt)
+            rows[index, IDX_BW] = 4.2*sdt / rows[index, IDX_20MA]
     return rows
 
 def get_csv(file_name):
@@ -89,21 +116,30 @@ def get_csv(file_name):
 
 def main():
     file_names = os.listdir(FOLDER)
+    process = counter = 0
     for file_name in file_names:
         if not file_name.endswith('.csv'):
             continue
         
+        # Get last 3 months data
         stock_data, rows = get_csv(file_name)
         length = min(len(rows), 90)
         rows = rows[:length]
         
-#        rows = get_avg_line(rows)
+        # Get technical value
+        rows = get_avg_line(rows)
         rows = get_kd_value(rows)
-#        rows = get_bbands(rows)
+        rows = get_bbands(rows)
 
         # Write to CSV
         df = pd.DataFrame(data=rows[0:,0:], columns=stock_data.columns)  # values, columns
-        df.to_csv("test.csv", index=False)
+        df.to_csv(FOLDER+'/'+file_name, index=False)
+        
+        # Print progress
+        counter += 1
+        if counter*100/len(file_names) >= process+20:
+            process += 20
+            print(str(process) + '%')
 
 if __name__ == '__main__':
     main()

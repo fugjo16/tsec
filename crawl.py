@@ -93,7 +93,7 @@ class Crawler():
 
     def _get_tse_data(self, date):
         date_str = '{0}{1:02d}{2:02d}'.format(date.year, date.month, date.day)
-        print date_str
+        print(date_str)
         url = 'http://www.twse.com.tw/exchangeReport/MI_INDEX'
 
         query_params = {
