@@ -42,7 +42,7 @@ class Crawler():
         ''' Save row to csv file '''
         row_header = []
         if not os.path.isfile('{}/{}.csv'.format(self.prefix, stock_id)):
-            row_header = ['Date','Volume','Value','Open','High','Low','Close','Charge','Number','Foreign','Invest','Dealer','K_9','D_9']
+            row_header = ['Date','Volume','Value','Open','High','Low','Close','Charge','Number','Foreign','Invest','Dealer']
 
         f = open('{}/{}.csv'.format(self.prefix, stock_id), 'ab')
         cw = csv.writer(f, lineterminator='\n')
