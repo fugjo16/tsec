@@ -64,8 +64,8 @@ def get_kd_value(rows):
         price = rows[index, 6]
         rsv = (price - min_9) / (max_9 - min_9) * 100 if (max_9 != min_9) else 0
         
-        rows[index,IDX_K9] = rows[index+1, IDX_K9]*2/3 + rsv*1/3                         # val_K
-        rows[index,IDX_D9] = rows[index+1, IDX_D9]*2/3 + rows[index,IDX_K9]*1/3          # val_D
+        rows[index,IDX_K9] = round(rows[index+1, IDX_K9]*2/3 + rsv*1/3, 2)                         # val_K
+        rows[index,IDX_D9] = round(rows[index+1, IDX_D9]*2/3 + rows[index,IDX_K9]*1/3, 2)          # val_D
     return rows
 
 def get_avg_line(rows):
@@ -73,11 +73,11 @@ def get_avg_line(rows):
         last_day = len(rows)-20
         for index in range(last_day-1, -1, -1):
             if rows[index, IDX_5MA] < 0:
-                rows[index, IDX_5MA] = sum(rows[index:index+5, IDX_CLOSE]) / 5
+                rows[index, IDX_5MA] = round(sum(rows[index:index+5, IDX_CLOSE]) / 5, 2)
             if rows[index, IDX_10MA] < 0:
-                rows[index, IDX_10MA] = sum(rows[index:index+10, IDX_CLOSE]) / 10
+                rows[index, IDX_10MA] = round(sum(rows[index:index+10, IDX_CLOSE]) / 10, 2)
             if rows[index, IDX_20MA] < 0:
-                rows[index, IDX_20MA] = sum(rows[index:index+20, IDX_CLOSE]) / 20        
+                rows[index, IDX_20MA] = round(sum(rows[index:index+20, IDX_CLOSE]) / 20, 2)
 #                rows[index, IDX_20MA] = sum(sum(rows[index:index+20, 4:6])) / 40    # 20MA with Min-Max
     return rows
     
@@ -88,10 +88,10 @@ def get_bbands(rows):
             if rows[index, IDX_20MA] <= 0:
                 continue
             sdt = np.std(rows[index:index+20, 6])
-            rows[index, IDX_UPB] = rows[index, IDX_20MA] + 2.1*sdt
-            rows[index, IDX_LWB] = rows[index, IDX_20MA] - 2.1*sdt
-            rows[index, IDX_PB] = (rows[index, IDX_CLOSE] - rows[index, IDX_LWB]) / (4.2*sdt)
-            rows[index, IDX_BW] = 4.2*sdt / rows[index, IDX_20MA]
+            rows[index, IDX_UPB] = round(rows[index, IDX_20MA] + 2.1*sdt, 2)
+            rows[index, IDX_LWB] = round(rows[index, IDX_20MA] - 2.1*sdt, 2)
+            rows[index, IDX_PB] = round((rows[index, IDX_CLOSE] - rows[index, IDX_LWB]) / (4.2*sdt), 4)
+            rows[index, IDX_BW] = round(4.2*sdt / rows[index, IDX_20MA], 4)
     return rows
 
 def get_csv(file_name):

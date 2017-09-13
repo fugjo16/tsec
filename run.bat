@@ -8,7 +8,7 @@ REM python crawl.py --check 2017 04 01
 python crawl.py --back
 python post_process.py
 echo.
-python analyze.py
+REM python analyze.py
 
 pause
 
